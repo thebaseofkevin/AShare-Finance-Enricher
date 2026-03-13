@@ -4,8 +4,8 @@
 
 ## 组件说明
 
-- **`baostock_fetch.py`**：拉取 A 股基础信息（code、name、industry 等），保存到 `{日期}_stocks_name.db`
-- **`yahoo_enrich.py`**：读取输入数据库，补充 Yahoo 指标（website、PE、PB、现金流等），输出到 `YYYY-MM-DD_HHMMSS_stocks_info.db`
+- **`baostock_fetch.py`**：拉取 A 股基础信息（code、name、industry 等），保存到 `{日期}_stocks_name.db`（表名：`stocks`）
+- **`yahoo_enrich.py`**：读取输入数据库，补充 Yahoo 指标（website、PE、PB、现金流等），输出到 `YYYY-MM-DD_HHMMSS_stocks_info.db`（表名：`stocks`）
 
 ## 环境安装
 
@@ -22,7 +22,7 @@ pip install -r requirements.txt
    python baostock_fetch.py
    ```
 
-2. 再用 Yahoo Finance 补充数据  
+2. 再用 Yahoo Finance 补充数据（可选 `--limit` 仅处理前 N 行用于测试）  
    ```bash
    python yahoo_enrich.py --input-db 2026-03-13_stocks_name.db
    ```
@@ -43,7 +43,7 @@ pip install -r requirements.txt
    "bps",         # 每股净资产
    "cash",        # 现金
    "short_term_borrowing", # 短期借款（兼容多个标签）
-   "gross_profit_margin",  # 毛利率
+   "gross_profit_margin",  # 毛利率（百分比字符串，例如 20%）
    "net_profit",           # 净利润
    "operating_cash_flow",  # 经营现金流
    "investment_cash_flow", # 投资现金流（兼容多个标签）
@@ -52,12 +52,13 @@ pip install -r requirements.txt
 ## 输出字段
 
 - **来自 Baostock**：`code`、`code_name`、`industry` 等基础字段  
-- **来自 Yahoo**：`website`、`total_share`、`pe`、`pb`、`roe`、`eps`、`bps`、`cash`、  
-  `short_term_loan`、`short_term_borrowing`、`gross_profit_margin`、`net_profit`、  
+- **来自 Yahoo**：`website`、`total_share`、`market_cap`、`price`、`pe`、`pb`、`roe`、`eps`、`bps`、`cash`、  
+  `short_term_borrowing`、`gross_profit_margin`、`net_profit`、  
   `operating_cash_flow`、`investment_cash_flow`
 
 ## 注意事项
 
 - 需要 Baostock 账号才能登录接口。
+- `yfinance` 未安装时会提示 `yfinance not installed`，无法完成 Yahoo 指标补充。
 - Yahoo Finance 可能出现 401/Invalid Crumb 等拒绝情况，程序内置重试与退避逻辑，但仍可能部分股票无数据。
 - 输出数据库采用当前“秒级时间戳”命名，方便多次运行区分。
