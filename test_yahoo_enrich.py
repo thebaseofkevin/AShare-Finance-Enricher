@@ -28,7 +28,7 @@ class TestYahooEnrich(unittest.TestCase):
         """Test fetch_yahoo when yfinance returns data."""
         # Mock the Ticker
         mock_ticker = MagicMock()
-        mock_ticker.info = {
+        mock_ticker.get_info.return_value = {
             "website": "http://example.com",
             "sharesOutstanding": 1000000,
             "trailingPE": 15.5,
@@ -80,35 +80,38 @@ class TestYahooEnrich(unittest.TestCase):
 
         mock_yf.Ticker.return_value = mock_ticker
 
-        result = fetch_yahoo("sh.600000")
-        self.assertIsInstance(result, dict)
-        self.assertEqual(result["website"], "http://example.com")
-        self.assertEqual(result["total_share"], 1000000)
-        self.assertEqual(result["pe"], 15.5)
-        self.assertEqual(result["pb"], 2.0)
-        self.assertEqual(result["roe"], 0.1)
-        self.assertEqual(result["eps"], 1.5)
-        self.assertEqual(result["bps"], 10.0)
-        self.assertEqual(result["cash"], 500000)
-        self.assertEqual(result["short_term_loan"], 200000)
-        self.assertEqual(result["short_term_borrowing"], 200000)
-        self.assertEqual(result["gross_profit_margin"], 0.2)  # 100000 / 500000
-        self.assertEqual(result["net_profit"], 50000)
-        self.assertEqual(result["operating_cash_flow"], 150000)
-        self.assertEqual(result["investment_cash_flow"], -50000)
+        data, err = fetch_yahoo("sh.600000")
+        self.assertIsNone(err)
+        self.assertIsInstance(data, dict)
+        self.assertEqual(data["website"], "http://example.com")
+        self.assertEqual(data["total_share"], 1000000)
+        self.assertEqual(data["pe"], 15.5)
+        self.assertEqual(data["pb"], 2.0)
+        self.assertEqual(data["roe"], 0.1)
+        self.assertEqual(data["eps"], 1.5)
+        self.assertEqual(data["bps"], 10.0)
+        self.assertEqual(data["cash"], 500000)
+        self.assertEqual(data["short_term_loan"], 200000)
+        self.assertEqual(data["short_term_borrowing"], 200000)
+        self.assertEqual(data["gross_profit_margin"], 0.2)  # 100000 / 500000
+        self.assertEqual(data["net_profit"], 50000)
+        self.assertEqual(data["operating_cash_flow"], 150000)
+        self.assertEqual(data["investment_cash_flow"], -50000)
 
     @patch('yahoo_enrich.yf', None)
     def test_fetch_yahoo_no_yf(self):
         """Test fetch_yahoo when yfinance is not installed."""
-        result = fetch_yahoo("sh.600000")
-        self.assertEqual(result, {})
+        data, err = fetch_yahoo("sh.600000")
+        self.assertEqual(data, {})
+        self.assertEqual(err, "yfinance not installed")
 
     @patch('yahoo_enrich.yf')
     def test_fetch_yahoo_exception(self, mock_yf):
         """Test fetch_yahoo when an exception occurs."""
         mock_yf.Ticker.side_effect = Exception("Network error")
-        result = fetch_yahoo("sh.600000")
-        self.assertEqual(result, {})
+        data, err = fetch_yahoo("sh.600000")
+        self.assertEqual(data, {})
+        self.assertEqual(err, "Network error")
 
 if __name__ == '__main__':
     unittest.main()
